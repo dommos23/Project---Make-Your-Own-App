@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block title %}Payment Cancelled | Clothing Store{% endblock %}
+
+{% block content %}
+<div class="text-center py-5">
+    <h1>Payment Cancelled</h1>
+    <p class="lead">Your payment has been cancelled and no charge was made.</p>
+    <p>You can continue with your order later or modify your cart.</p>
+    
+    <div class="mt-4">
+        <a href="{% url 'cart:cart_detail' %}" class="btn btn-primary">Return to Cart</a>
+        <a href="{% url 'products:product_list' %}" class="btn btn-outline-primary">Continue Shopping</a>
+    </div>
+</div>
+{% endblock %}

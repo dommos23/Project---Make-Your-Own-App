@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block title %}Payment Successful | Clothing Store{% endblock %}
+
+{% block content %}
+<div class="text-center py-5">
+    <div class="mb-4">
+        <i class="fas fa-check-circle text-success" style="font-size: 5rem;"></i>
+    </div>
+    <h1>Payment Successful!</h1>
+    <p class="lead">Thank you for your purchase. Your order has been confirmed.</p>
+    <p>Your order number is: <strong>{{ order.id }}</strong></p>
+    <p>We've sent a confirmation email to <strong>{{ user.email }}</strong></p>
+    
+    <div class="mt-4">
+        <a href="{% url 'orders:order_detail' order.id %}" class="btn btn-primary">View Order Details</a>
+        <a href="{% url 'products:product_list' %}" class="btn btn-outline-primary">Continue Shopping</a>
+    </div>
+</div>
+{% endblock %}

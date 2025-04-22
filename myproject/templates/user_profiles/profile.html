@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %}My Profile | Clothing Store{% endblock %}
+
+{% block content %}
+<h1>My Profile</h1>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Personal Information</h5>
+                <a href="{% url 'user_profiles:profile_edit' %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+            </div>
+            <div class="card-body">
+                <p><strong>Name:</strong> {{ user.get_full_name }}</p>
+                <p><strong>Email:</strong> {{ user.email }}</p>
+                <p><strong>Phone:</strong> {{ user.userprofile.phone_number|default:"Not provided" }}</p>
+                <p><strong>Address:</strong> {{ user.userprofile.address|default:"Not provided" }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Account Summary</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Member Since:</strong> {{ user.date_joined|date:"F j, Y" }}</p>
+                <p><strong>Orders:</strong> {{ orders_count }}</p>
+                <p><a href="{% url 'orders:order_history' %}" class="btn btn-outline-primary">View Order History</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Payment | Clothing Store{% endblock %}
+
+{% block content %}
+<h1>Payment</h1>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Payment Information</h5>
+            </div>
+            <div class="card-body">
+                <form id="payment-form" method="post">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    <div id="card-element" class="mb-3">
+                        <!-- Stripe elements will be inserted here -->
+                    </div>
+                    <div id="card-errors" role="alert" class="text-danger mb-3"></div>
+                    <button type="submit" class="btn btn-primary" id="submit-button">Pay Now</button>
+                    <a href="{% url 'payments:payment_cancel' %}" class="btn btn-outline-secondary">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Order Summary</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    {% for item in order.items.all %}
+                    <li class="list-group-item d-flex justify-content-between">
+                        <div>
+                            {{ item.product.name }} <span class="text-muted">x {{ item.quantity }}</span>
+                        </div>
+                        <div>${{ item.price }}</div>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="card-footer">
+                <div class="d-flex justify-content-between">
+                    <strong>Total:</strong>
+                    <strong>${{ order.total_price }}</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+    // Stripe payment processing code would go here
+</script>
+{% endblock %}

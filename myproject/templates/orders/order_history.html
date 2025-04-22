@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}Order History | Clothing Store{% endblock %}
+
+{% block content %}
+<h1>Your Order History</h1>
+
+{% if orders %}
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Order #</th>
+                <th>Date</th>
+                <th>Total</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+            <tr>
+                <td>{{ order.id }}</td>
+                <td>{{ order.created_at|date:"F j, Y" }}</td>
+                <td>${{ order.total_price }}</td>
+                <td><span class="badge bg-{% if order.status == 'Delivered' %}success{% elif order.status == 'Shipped' %}info{% elif order.status == 'Paid' %}primary{% else %}warning{% endif %}">{{ order.status }}</span></td>
+                <td>
+                    <a href="{% url 'orders:order_detail' order.id %}" class="btn btn-sm btn-outline-primary">View Details</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-info">
+    You haven't placed any orders yet. <a href="{% url 'products:product_list' %}">Start shopping</a>
+</div>
+{% endif %}
+{% endblock %}
