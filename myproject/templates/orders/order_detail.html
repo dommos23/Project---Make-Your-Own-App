@@ -61,4 +61,31 @@
         </div>
     </div>
 </div>
+
+{% if order.tracking_number %}
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">Tracking Information</h5>
+    </div>
+    <div class="card-body">
+        <p><strong>Tracking Number:</strong> {{ order.tracking_number }}</p>
+        {% if order.carrier %}
+        <p><strong>Carrier:</strong> {{ order.carrier }}</p>
+        {% endif %}
+        {% if order.shipping_date %}
+        <p><strong>Shipped On:</strong> {{ order.shipping_date|date:"F j, Y" }}</p>
+        {% endif %}
+        
+        {% if order.carrier == 'USPS' %}
+        <a href="https://tools.usps.com/go/TrackConfirmAction?tLabels={{ order.tracking_number }}" class="btn btn-primary" target="_blank">Track Package</a>
+        {% elif order.carrier == 'UPS' %}
+        <a href="https://www.ups.com/track?tracknum={{ order.tracking_number }}" class="btn btn-primary" target="_blank">Track Package</a>
+        {% elif order.carrier == 'FedEx' %}
+        <a href="https://www.fedex.com/fedextrack/?trknbr={{ order.tracking_number }}" class="btn btn-primary" target="_blank">Track Package</a>
+        {% else %}
+        <p class="text-muted">Contact us for tracking details.</p>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
 {% endblock %}

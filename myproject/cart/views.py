@@ -31,11 +31,11 @@ def cart_add(request, product_id):  # Renamed from add_to_cart
     
     # If the product was already in the cart, increase the quantity
     if not created:
-        cart_item.quantity += quantity
+        cart_item.quantity = quantity  # Instead of += quantity
         cart_item.save()
     
     messages.success(request, f"{product.name} added to your cart.")
-    return redirect('cart:cart_detail')
+    return redirect('caRT:cart_detail')
 
 @login_required
 def cart_remove(request, item_id):  # Renamed from remove_from_cart
@@ -44,7 +44,8 @@ def cart_remove(request, item_id):  # Renamed from remove_from_cart
     cart_item.delete()
     
     messages.success(request, f"{product_name} removed from your cart.")
-    return redirect('cart:cart_detail')
+    return redirect('caRT:cart_detail')
+
 
 @login_required
 def cart_update(request, item_id):  # Renamed from update_cart
@@ -62,4 +63,4 @@ def cart_update(request, item_id):  # Renamed from update_cart
     except ValueError:
         messages.error(request, "Invalid quantity.")
         
-    return redirect('cart:cart_detail')
+    return redirect('caRT:cart_detail')

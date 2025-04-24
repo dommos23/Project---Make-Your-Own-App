@@ -24,6 +24,11 @@ class Order(models.Model):
     shipping_zip = models.CharField(max_length=20)
     shipping_country = models.CharField(max_length=100)
     
+    # Add these new fields
+    tracking_number = models.CharField(max_length=100, blank=True, null=True)
+    carrier = models.CharField(max_length=100, blank=True, null=True)
+    shipping_date = models.DateField(blank=True, null=True)
+    
     def __str__(self):
         return f"Order {self.order_number}"
     
@@ -34,7 +39,7 @@ class Order(models.Model):
     
     def get_total_items(self):
         return sum(item.quantity for item in self.items.all())
-
+    
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
     product = models.ForeignKey(Product, on_delete=models.CASCADE)

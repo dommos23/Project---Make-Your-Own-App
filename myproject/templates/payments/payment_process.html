@@ -15,13 +15,56 @@
             <div class="card-body">
                 <form id="payment-form" method="post">
                     {% csrf_token %}
-                    {{ form|crispy }}
-                    <div id="card-element" class="mb-3">
-                        <!-- Stripe elements will be inserted here -->
+                    
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}
+                            {{ error }}
+                        {% endfor %}
                     </div>
-                    <div id="card-errors" role="alert" class="text-danger mb-3"></div>
-                    <button type="submit" class="btn btn-primary" id="submit-button">Pay Now</button>
-                    <a href="{% url 'payments:payment_cancel' %}" class="btn btn-outline-secondary">Cancel</a>
+                    {% endif %}
+                    
+                    {{ form|crispy }}
+                    
+                    <div class="form-group mt-4">
+                        <label for="card_number">Card Number</label>
+                        <input type="text" name="card_number" id="card_number" class="form-control {% if form.card_number.errors %}is-invalid{% endif %}" placeholder="XXXX XXXX XXXX XXXX" required>
+                        {% if form.card_number.errors %}
+                        <div class="invalid-feedback">
+                            {{ form.card_number.errors.0 }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="card_expiry">Expiration Date</label>
+                                <input type="text" name="card_expiry" id="card_expiry" class="form-control {% if form.card_expiry.errors %}is-invalid{% endif %}" placeholder="MM/YY" required>
+                                {% if form.card_expiry.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.card_expiry.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="card_cvv">CVV</label>
+                                <input type="text" name="card_cvv" id="card_cvv" class="form-control {% if form.card_cvv.errors %}is-invalid{% endif %}" placeholder="XXX" required>
+                                {% if form.card_cvv.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.card_cvv.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary" id="submit-button">Pay ${{ order.total_price }}</button>
+                        <a href="{% url 'payments:payment_cancel' %}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
                 </form>
             </div>
         </div>
@@ -39,7 +82,7 @@
                         <div>
                             {{ item.product.name }} <span class="text-muted">x {{ item.quantity }}</span>
                         </div>
-                        <div>${{ item.price }}</div>
+                        <div>${{ item.get_total_price }}</div>
                     </li>
                     {% endfor %}
                 </ul>
@@ -53,11 +96,4 @@
         </div>
     </div>
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script src="https://js.stripe.com/v3/"></script>
-<script>
-    // Stripe payment processing code would go here
-</script>
 {% endblock %}

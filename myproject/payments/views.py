@@ -19,19 +19,28 @@ def payment_process(request):
     if request.method == 'POST':
         form = PaymentForm(request.POST)
         if form.is_valid():
+            # In a real app, you would process payment through a payment gateway here
             payment = form.save(commit=False)
             payment.user = request.user
             payment.order = order
             payment.amount = order.total_price
-            payment.status = 'Completed'  # For demo, assume payment is successful
+            payment.status = 'Completed'  # For demo purposes
             payment.save()
             
             # Update order status
             order.status = 'Paid'
             order.save()
             
+            # Decrease product quantities
+            for item in order.items.all():
+                product = item.product
+                product.stock -= item.quantity
+                product.save()
+            
             messages.success(request, "Payment successful!")
             return redirect('payments:payment_success')
+        else:
+            messages.error(request, "Please correct the errors below.")
     else:
         form = PaymentForm(initial={'payment_method': 'Credit Card'})
     

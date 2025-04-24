@@ -19,7 +19,7 @@
         <p><strong>Category:</strong> {{ product.category.name }}</p>
         <p><strong>In Stock:</strong> {{ product.stock }}</p>
         
-        <form action="{% url 'cart:cart_add' product.id %}" method="post">
+        <form action="{% url 'caRT:cart_add' product.id %}" method="post">
             {% csrf_token %}
             <div class="form-group mb-3">
                 <label for="quantity">Quantity:</label>

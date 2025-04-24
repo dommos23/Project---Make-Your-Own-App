@@ -10,7 +10,6 @@ from orders.models import Order
 def profile_view(request):
     user = request.user
     orders_count = Order.objects.filter(user=user).count()
-    
     return render(request, 'user_profiles/profile.html', {
         'user': user,
         'orders_count': orders_count
