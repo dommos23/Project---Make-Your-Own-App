@@ -1,11 +1,12 @@
+# orders/views.py - Clean up imports
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .models import Order, OrderItem
-from .forms import OrderCreateForm
 from caRT.models import Cart
-from payments.forms import PaymentForm
-
+# Add this if you're using a form:
+from .forms import OrderCreateForm
+# And if you're using payment form:
 from payments.forms import PaymentForm
 @login_required
 def order_history(request):  # Renamed from order_list

@@ -1,10 +1,10 @@
 # Add these imports to the top of your views.py files as needed
-
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from .models import Cart  # Replace with specific models
-from .forms import Product  # Replace with specific forms
+from .models import Cart
+from products.models import Product
+# Remove any unnecessary imports
 @login_required
 def cart_detail(request):
     # This function is already correctly named

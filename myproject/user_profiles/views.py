@@ -1,10 +1,9 @@
 # Add these imports to the top of your views.py files as needed
-
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from .models import UserProfile
-from .forms import UserForm, UserProfileForm
+# Add these if you're using forms:
+from .forms import UserProfileForm, UserForm
 from orders.models import Order
 
 @login_required
