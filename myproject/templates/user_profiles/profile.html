@@ -15,8 +15,8 @@
             <div class="card-body">
                 <p><strong>Name:</strong> {{ user.get_full_name }}</p>
                 <p><strong>Email:</strong> {{ user.email }}</p>
-                <p><strong>Phone:</strong> {{ user.userprofile.phone_number|default:"Not provided" }}</p>
-                <p><strong>Address:</strong> {{ user.userprofile.address|default:"Not provided" }}</p>
+                <p><strong>Phone:</strong> {{ profile.phone_number|default:"Not provided" }}</p>
+                <p><strong>Address:</strong> {{ profile.address|default:"Not provided" }}</p>
             </div>
         </div>
     </div>

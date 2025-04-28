@@ -7,14 +7,15 @@
 <div class="row">
     <div class="col-md-8">
         <h1>Checkout</h1>
-        <form method="post">
+        <form method="post" id="checkout-form">
             {% csrf_token %}
+            <!-- Shipping info section unchanged -->
             <div class="card mb-4">
                 <div class="card-header">
                     <h5 class="mb-0">Shipping Information</h5>
                 </div>
                 <div class="card-body">
-                    {{ shipping_form|crispy }}
+                    {{ order_form|crispy }}
                 </div>
             </div>
             
@@ -23,14 +24,52 @@
                     <h5 class="mb-0">Payment Information</h5>
                 </div>
                 <div class="card-body">
-                    {{ payment_form|crispy }}
+                    <!-- Payment method field -->
+                    <div class="mb-3">
+                        <label for="{{ payment_form.payment_method.id_for_label }}">Payment Method</label>
+                        {{ payment_form.payment_method }}
+                    </div>
+                    
+                    <!-- Custom fields with validation -->
+                    <div class="form-group mb-3">
+                        <label for="card_number">Card Number</label>
+                        <input type="text" name="card_number" id="card_number" class="form-control" required 
+                               pattern="[0-9]{13,16}" title="Card number must be 13-16 digits">
+                        <div class="invalid-feedback" id="card-number-error">
+                            Please enter a valid card number (13-16 digits).
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="card_expiry">Expiration Date (MM/YY)</label>
+                                <input type="text" name="card_expiry" id="card_expiry" class="form-control" required 
+                                       pattern="(0[1-9]|1[0-2])\/[0-9]{2}" title="Please use MM/YY format (e.g. 05/25)">
+                                <div class="invalid-feedback" id="card-expiry-error">
+                                    Please enter a valid expiration date in MM/YY format.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="card_cvv">CVV</label>
+                                <input type="text" name="card_cvv" id="card_cvv" class="form-control" required 
+                                       pattern="[0-9]{3,4}" title="CVV must be 3-4 digits">
+                                <div class="invalid-feedback" id="card-cvv-error">
+                                    Please enter a valid CVV (3-4 digits).
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
             
-            <button type="submit" class="btn btn-primary">Place Order</button>
+            <button type="submit" class="btn btn-primary">Complete Purchase</button>
         </form>
     </div>
     
+    <!-- Order summary section unchanged -->
     <div class="col-md-4">
         <div class="card">
             <div class="card-header">
@@ -57,4 +96,47 @@
         </div>
     </div>
 </div>
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('checkout-form');
+        const cardNumber = document.getElementById('card_number');
+        const cardExpiry = document.getElementById('card_expiry');
+        const cardCvv = document.getElementById('card_cvv');
+        
+        form.addEventListener('submit', function(event) {
+            let isValid = true;
+            
+            // Validate card number (13-16 digits)
+            if (!cardNumber.value.match(/^[0-9]{13,16}$/)) {
+                cardNumber.classList.add('is-invalid');
+                isValid = false;
+            } else {
+                cardNumber.classList.remove('is-invalid');
+            }
+            
+            // Validate expiry date (MM/YY format)
+            if (!cardExpiry.value.match(/^(0[1-9]|1[0-2])\/[0-9]{2}$/)) {
+                cardExpiry.classList.add('is-invalid');
+                isValid = false;
+            } else {
+                cardExpiry.classList.remove('is-invalid');
+            }
+            
+            // Validate CVV (3-4 digits)
+            if (!cardCvv.value.match(/^[0-9]{3,4}$/)) {
+                cardCvv.classList.add('is-invalid');
+                isValid = false;
+            } else {
+                cardCvv.classList.remove('is-invalid');
+            }
+            
+            if (!isValid) {
+                event.preventDefault();
+            }
+        });
+    });
+</script>
+{% endblock %}
 {% endblock %}

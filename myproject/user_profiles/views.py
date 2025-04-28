@@ -2,16 +2,18 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-# Add these if you're using forms:
 from .forms import UserProfileForm, UserForm
 from orders.models import Order
 
 @login_required
 def profile_view(request):
     user = request.user
+    profile = user.profile  # Add this line to get the profile
     orders_count = Order.objects.filter(user=user).count()
+    
     return render(request, 'user_profiles/profile.html', {
         'user': user,
+        'profile': profile,  # Add this to the context
         'orders_count': orders_count
     })
 

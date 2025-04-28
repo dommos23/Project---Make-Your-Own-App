@@ -3,13 +3,15 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .models import Order, OrderItem
+import re
+import uuid
 from caRT.models import Cart
 # Add this if you're using a form:
 from .forms import OrderCreateForm
 # And if you're using payment form:
 from payments.forms import PaymentForm
 @login_required
-def order_history(request):  # Renamed from order_list
+def order_history(request): 
     orders = Order.objects.filter(user=request.user).order_by('-created_at')
     orders_count = orders.count()
     return render(request, 'orders/order_history.html', {
@@ -28,12 +30,34 @@ def order_create(request):
     
     if not cart_items:
         messages.warning(request, "Your cart is empty.")
-        return redirect('cart:cart_detail')
+        return redirect('caRT:cart_detail')
     
     if request.method == 'POST':
-        form = OrderCreateForm(request.POST)
-        if form.is_valid():
-            order = form.save(commit=False)
+        order_form = OrderCreateForm(request.POST)
+        payment_form = PaymentForm(request.POST)
+        
+        # Validate credit card information
+        card_number = request.POST.get('card_number', '')
+        card_expiry = request.POST.get('card_expiry', '')
+        card_cvv = request.POST.get('card_cvv', '')
+        
+        # Custom validation
+        is_valid = True
+        if not re.match(r'^[0-9]{13,16}$', card_number):
+            messages.error(request, "Please enter a valid card number (13-16 digits).")
+            is_valid = False
+        
+        if not re.match(r'^(0[1-9]|1[0-2])\/[0-9]{2}$', card_expiry):
+            messages.error(request, "Please enter a valid expiration date in MM/YY format.")
+            is_valid = False
+        
+        if not re.match(r'^[0-9]{3,4}$', card_cvv):
+            messages.error(request, "Please enter a valid CVV (3-4 digits).")
+            is_valid = False
+        
+        if order_form.is_valid() and payment_form.is_valid() and is_valid:
+            # Create order
+            order = order_form.save(commit=False)
             order.user = request.user
             
             # Calculate total price from cart
@@ -41,7 +65,7 @@ def order_create(request):
             order.total_price = total_price
             order.save()
             
-            # Create order items from cart
+            # Create order items
             for cart_item in cart_items:
                 OrderItem.objects.create(
                     order=order,
@@ -50,19 +74,40 @@ def order_create(request):
                     price=cart_item.product.price
                 )
             
+            # Process payment
+            payment = payment_form.save(commit=False)
+            payment.user = request.user
+            payment.order = order
+            payment.amount = total_price
+            payment.status = 'Completed'
+            # Store card info (in a real app, you'd store a token, not actual card details)
+            payment.transaction_id = f"TRANS-{uuid.uuid4().hex[:8].upper()}"
+            payment.save()
+            
+            # Update order status
+            order.status = 'Paid'
+            order.save()
+            
+            # Decrease product quantities
+            for item in order.items.all():
+                product = item.product
+                product.stock -= item.quantity
+                product.save()
+            
             # Clear the cart
             cart_items.delete()
             
-            messages.success(request, "Your order has been placed successfully.")
-            return redirect('payments:payment_process')  # Forward to payment
+            messages.success(request, "Your order has been placed and payment processed successfully.")
+            return redirect('orders:order_detail', order_id=order.id)
     else:
-        form = OrderCreateForm()
+        order_form = OrderCreateForm()
+        payment_form = PaymentForm(initial={'payment_method': 'Credit Card'})
     
     context = {
-        'shipping_form': form,  # Renamed to match template
+        'order_form': order_form,
+        'payment_form': payment_form,
         'cart_items': cart_items,
-        'cart_total': sum(item.get_total_price() for item in cart_items),
-        'payment_form': PaymentForm()  # Added to match template
+        'cart_total': sum(item.get_total_price() for item in cart_items)
     }
     
     return render(request, 'orders/order_create.html', context)
