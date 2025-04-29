@@ -1,0 +1,31 @@
+Your Order #{{ order.order_number }} Has Been Shipped!
+
+Dear {{ user.get_full_name|default:user.username }},
+
+Good news! Your order (#{{ order.order_number }}) has been shipped and is on its way to you.
+
+TRACKING INFORMATION
+Carrier: {{ order.carrier }}
+Tracking Number: {{ order.tracking_number }}
+Shipped On: {{ order.shipping_date|date:"F j, Y" }}
+
+{% if order.carrier == 'USPS' %}
+Track your package at: https://tools.usps.com/go/TrackConfirmAction?tLabels={{ order.tracking_number }}
+{% elif order.carrier == 'UPS' %}
+Track your package at: https://www.ups.com/track?tracknum={{ order.tracking_number }}
+{% elif order.carrier == 'FedEx' %}
+Track your package at: https://www.fedex.com/fedextrack/?trknbr={{ order.tracking_number }}
+{% else %}
+Contact us for tracking details.
+{% endif %}
+
+ORDER SUMMARY
+{% for item in order_items %}
+- {{ item.product.name }} x {{ item.quantity }}
+{% endfor %}
+
+If you have any questions about your order, please don't hesitate to contact us.
+
+Thank you for shopping with us!
+
+Clothing Store

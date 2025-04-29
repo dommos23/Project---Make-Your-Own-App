@@ -1,0 +1,24 @@
+Order Confirmation - Order #{{ order.order_number }}
+
+Dear {{ user.get_full_name|default:user.username }},
+
+Thank you for your order! We're pleased to confirm that your order has been received and is being processed.
+
+ORDER DETAILS
+Order Number: {{ order.order_number }}
+Order Date: {{ order.created_at|date:"F j, Y" }}
+Total: ${{ order.total_price }}
+
+ITEMS ORDERED
+{% for item in order_items %}
+- {{ item.product.name }} x {{ item.quantity }} @ ${{ item.price }} each = ${{ item.get_total_price }}
+{% endfor %}
+
+SHIPPING INFORMATION
+{{ order.shipping_address }}
+{{ order.shipping_city }}, {{ order.shipping_state }} {{ order.shipping_zip }}
+{{ order.shipping_country }}
+
+We'll notify you once your order has been shipped. Thank you for shopping with us!
+
+Clothing Store

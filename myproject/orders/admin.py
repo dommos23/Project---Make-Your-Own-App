@@ -1,5 +1,7 @@
 from django.contrib import admin
 from .models import Order, OrderItem
+from .utils import send_shipping_confirmation_email
+from django.contrib import messages
 
 class OrderItemInline(admin.TabularInline):
     model = OrderItem
@@ -17,8 +19,15 @@ def mark_as_shipped(modeladmin, request, queryset):
             if not order.shipping_date:
                 order.shipping_date = today
             order.save()
+             # Send shipping confirmation email
+            try:
+                send_shipping_confirmation_email(order)
+            except Exception as e:
+                messages.error(request, f"Error sending shipping email for order #{order.order_number}: {str(e)}")
 
-mark_as_shipped.short_description = "Mark selected orders as shipped"
+
+mark_as_shipped.short_description = "Mark selected orders as shipped and send confirmation emails"
+
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
     list_display = ['id', 'order_number', 'user', 'status', 'total_price', 'created_at', 'tracking_number']
@@ -53,3 +62,12 @@ class OrderAdmin(admin.ModelAdmin):
             from django.utils import timezone
             obj.shipping_date = timezone.now().date()
         super().save_model(request, obj, form, change)
+          # Send shipping confirmation email
+        try:
+                send_shipping_confirmation_email(obj)
+        except Exception as e:
+                # Log the error
+                print(f"Error sending shipping confirmation email: {str(e)}")
+                messages.error(request, f"Error sending shipping confirmation email: {str(e)}")
+        else:
+            super().save_model(request, obj, form, change)

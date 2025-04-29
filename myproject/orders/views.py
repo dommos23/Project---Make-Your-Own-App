@@ -3,6 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .models import Order, OrderItem
+from .utils import send_order_confirmation_email
 import re
 import uuid
 from caRT.models import Cart
@@ -23,7 +24,31 @@ def order_history(request):
 def order_detail(request, order_id):
     order = get_object_or_404(Order, id=order_id, user=request.user)
     return render(request, 'orders/order_detail.html', {'order': order})
-
+@login_required
+def order_cancel(request, order_id):
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+    
+    # Only allow cancellation of pending orders
+    if order.status != 'Pending':
+        messages.error(request, "Only pending orders can be cancelled.")
+        return redirect('orders:order_detail', order_id=order.id)
+    
+    if request.method == 'POST':
+        # Update order status
+        order.status = 'Cancelled'
+        order.save()
+        
+        # Restore product quantities
+        for item in order.items.all():
+            product = item.product
+            product.stock += item.quantity
+            product.save()
+        
+        messages.success(request, "Your order has been cancelled and product quantities have been restored.")
+        return redirect('orders:order_history')
+    
+    # If not POST request, redirect back to order detail
+    return redirect('orders:order_detail', order_id=order.id)
 @login_required
 def order_create(request):
     cart_items = Cart.objects.filter(user=request.user)
@@ -96,9 +121,18 @@ def order_create(request):
             
             # Clear the cart
             cart_items.delete()
-            
+            # After the order is created and processed (after order.save() and before the redirect)
+            try:
+            # Send order confirmation email
+                send_order_confirmation_email(order)
+            except Exception as e:
+    # Log the error but don't stop the process
+                print(f"Error sending order confirmation email: {str(e)}")
             messages.success(request, "Your order has been placed and payment processed successfully.")
             return redirect('orders:order_detail', order_id=order.id)
+        # After the order is created and processed (after order.save() and before the redirect)
+        messages.success(request, "Your order has been placed and payment processed successfully.")
+        return redirect('orders:order_detail', order_id=order.id)
     else:
         order_form = OrderCreateForm()
         payment_form = PaymentForm(initial={'payment_method': 'Credit Card'})
