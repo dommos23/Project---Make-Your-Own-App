@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from products.models import Product
+from discounts.models import Discount
 import uuid
 
 class Order(models.Model):
@@ -11,6 +12,21 @@ class Order(models.Model):
         ('Delivered', 'Delivered'),
         ('Cancelled', 'Cancelled'),
     ]
+    discount = models.ForeignKey(
+        Discount, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        related_name='orders'
+    )
+    discount_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    
+    def get_total_before_discount(self):
+        return sum(item.get_total_price() for item in self.items.all())
+    
+    def get_final_total(self):
+        total = self.get_total_before_discount()
+        return total - self.discount_amount
     
     order_number = models.CharField(max_length=32, unique=True, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders')

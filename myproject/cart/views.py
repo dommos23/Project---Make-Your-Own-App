@@ -4,17 +4,67 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .models import Cart
 from products.models import Product
+from discounts.forms import DiscountApplyForm
+from discounts.models import Discount
 # Remove any unnecessary imports
 @login_required
 def cart_detail(request):
-    # This function is already correctly named
     cart_items = Cart.objects.filter(user=request.user)
     cart_total = sum(item.get_total_price() for item in cart_items)
+    
+    # Get current discount from session
+    discount_code = request.session.get('discount_code')
+    discount = None
+    discount_amount = 0
+    
+    if discount_code:
+        try:
+            discount = Discount.objects.get(code=discount_code)
+            if discount.is_valid(cart_total):
+                discount_amount = discount.get_discount_amount(cart_total)
+            else:
+                # Invalid discount, remove from session
+                del request.session['discount_code']
+                messages.warning(request, "The discount code is not valid anymore.")
+        except Discount.DoesNotExist:
+            # Discount not found, remove from session
+            del request.session['discount_code']
+    
+    # Apply discount form
+    if request.method == 'POST':
+        form = DiscountApplyForm(request.POST)
+        if form.is_valid():
+            code = form.cleaned_data['code']
+            if code:
+                try:
+                    discount = Discount.objects.get(code=code)
+                    if discount.is_valid(cart_total):
+                        request.session['discount_code'] = code
+                        discount_amount = discount.get_discount_amount(cart_total)
+                        messages.success(request, "Discount applied successfully!")
+                    else:
+                        messages.warning(request, "This discount code is not valid.")
+                except Discount.DoesNotExist:
+                    messages.warning(request, "Invalid discount code.")
+            else:
+                # No code provided, remove discount
+                if 'discount_code' in request.session:
+                    del request.session['discount_code']
+                    messages.info(request, "Discount removed.")
+            
+            return redirect('caRT:cart_detail')
+    else:
+        form = DiscountApplyForm()
     
     context = {
         'cart_items': cart_items,
         'cart_total': cart_total,
+        'discount_form': form,
+        'discount': discount,
+        'discount_amount': discount_amount,
+        'final_total': cart_total - discount_amount
     }
+    
     return render(request, 'cart/cart_detail.html', context)
 
 @login_required

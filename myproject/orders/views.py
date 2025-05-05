@@ -3,13 +3,13 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .models import Order, OrderItem
+from discounts.forms import DiscountApplyForm
+from discounts.models import Discount
 from .utils import send_order_confirmation_email
 import re
 import uuid
 from caRT.models import Cart
-# Add this if you're using a form:
 from .forms import OrderCreateForm
-# And if you're using payment form:
 from payments.forms import PaymentForm
 @login_required
 def order_history(request): 
@@ -87,6 +87,27 @@ def order_create(request):
             
             # Calculate total price from cart
             total_price = sum(item.get_total_price() for item in cart_items)
+            
+            # Apply discount if available
+            discount_code = request.session.get('discount_code')
+            if discount_code:
+                try:
+                    discount = Discount.objects.get(code=discount_code)
+                    if discount.is_valid(total_price):
+                        discount_amount = discount.get_discount_amount(total_price)
+                        order.discount = discount
+                        order.discount_amount = discount_amount
+                        total_price -= discount_amount
+                        
+                        # Increment usage count
+                        discount.current_usage += 1
+                        discount.save()
+                        
+                        # Clear discount from session
+                        del request.session['discount_code']
+                except Discount.DoesNotExist:
+                    pass
+            
             order.total_price = total_price
             order.save()
             

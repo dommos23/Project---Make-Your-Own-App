@@ -50,6 +50,48 @@
     </table>
 </div>
 
+<!-- Discount code form -->
+<div class="card mt-4 mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">Apply Promo Code</h5>
+    </div>
+    <div class="card-body">
+        <form method="post" class="d-flex">
+            {% csrf_token %}
+            <div class="flex-grow-1 me-2">
+                {{ discount_form.code }}
+            </div>
+            <button type="submit" class="btn btn-primary">Apply</button>
+        </form>
+    </div>
+</div>
+
+<!-- Order Summary -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">Order Summary</h5>
+    </div>
+    <div class="card-body">
+        <div class="d-flex justify-content-between mb-2">
+            <span>Subtotal:</span>
+            <span>${{ cart_total }}</span>
+        </div>
+        
+        {% if discount %}
+        <div class="d-flex justify-content-between mb-2 text-success">
+            <span>Discount ({{ discount.code }}):</span>
+            <span>-${{ discount_amount }}</span>
+        </div>
+        {% endif %}
+        
+        <hr>
+        <div class="d-flex justify-content-between fw-bold">
+            <span>Total:</span>
+            <span>${{ final_total }}</span>
+        </div>
+    </div>
+</div>
+
 <div class="d-flex justify-content-between mt-4">
     <a href="{% url 'products:product_list' %}" class="btn btn-secondary">Continue Shopping</a>
     <a href="{% url 'orders:order_create' %}" class="btn btn-primary">Proceed to Checkout</a>

@@ -46,6 +46,8 @@ INSTALLED_APPS = [
     'orders',
     'user_profiles',
     'payments',
+    'two_factor',
+    'discounts',
 ]
 
 MIDDLEWARE = [
@@ -151,3 +153,15 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'dominicmosca653@gmail.com'  # Replace with your Gmail address
 EMAIL_HOST_PASSWORD = 'fswj dcrk cahr wmzq'  # Replace with an app password
+
+# Django-allauth settings (updated format)
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
+
+# Updated settings without deprecation warnings
+ACCOUNT_LOGIN_METHODS = {'email'}  # Use email for login
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'username*', 'password1*', 'password2*']  # Required fields
+ACCOUNT_UNIQUE_EMAIL = True
+ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
