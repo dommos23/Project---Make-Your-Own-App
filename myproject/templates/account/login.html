@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}Sign In | Clothing Store{% endblock %}
+
+{% block content %}
+<script>
+  // Redirect to the 2FA login page
+  window.location.href = "{% url 'two_factor:login' %}";
+</script>
+
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header">
+        <h1>Sign In</h1>
+      </div>
+      <div class="card-body">
+        <p>Redirecting to login page...</p>
+        <p>If you are not redirected automatically, please <a href="{% url 'two_factor:login' %}">click here</a>.</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
