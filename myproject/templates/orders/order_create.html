@@ -15,9 +15,46 @@
                     <h5 class="mb-0">Shipping Information</h5>
                 </div>
                 <div class="card-body">
-                    {{ order_form|crispy }}
+                    {% if has_profile_address %}
+                    <div class="mb-3 form-check">
+                        {{ order_form.use_profile_address }}
+                        <label class="form-check-label" for="{{ order_form.use_profile_address.id_for_label }}">
+                            {{ order_form.use_profile_address.label }}
+                        </label>
+                        <small class="form-text text-muted">{{ order_form.use_profile_address.help_text }}</small>
+                    </div>
+                    <div id="shipping-fields">
+                        {{ order_form.shipping_address|as_crispy_field }}
+                        {{ order_form.shipping_city|as_crispy_field }}
+                        {{ order_form.shipping_state|as_crispy_field }}
+                        {{ order_form.shipping_zip|as_crispy_field }}
+                        {{ order_form.shipping_country|as_crispy_field }}
+                    </div>
+                    {% else %}
+                        {{ order_form|crispy }}
+                    {% endif %}
                 </div>
             </div>
+            
+            <!-- Add this JavaScript to toggle the shipping fields visibility -->
+            {% block extra_js %}
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    var useProfileAddressCheckbox = document.getElementById('{{ order_form.use_profile_address.id_for_label }}');
+                    var shippingFields = document.getElementById('shipping-fields');
+                    
+                    if (useProfileAddressCheckbox) {
+                        useProfileAddressCheckbox.addEventListener('change', function() {
+                            if (this.checked) {
+                                shippingFields.style.display = 'none';
+                            } else {
+                                shippingFields.style.display = 'block';
+                            }
+                        });
+                    }
+                });
+            </script>
+            {% endblock %}
             
             <div class="card mb-4">
                 <div class="card-header">
@@ -86,16 +123,29 @@
                     </li>
                     {% endfor %}
                 </ul>
-            </div>
-            <div class="card-footer">
-                <div class="d-flex justify-content-between">
-                    <strong>Total:</strong>
-                    <strong>${{ cart_total }}</strong>
+                
+                <!-- Add this section for discount information -->
+                <div class="mt-3">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Subtotal:</span>
+                        <span>${{ cart_total|floatformat:2 }}</span>
+                    </div>
+                    
+                    {% if discount %}
+                    <div class="d-flex justify-content-between mb-2 text-success">
+                        <span>Discount ({{ discount.code }}):</span>
+                        <span>-${{ discount_amount|floatformat:2 }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    <hr>
+                    <div class="d-flex justify-content-between fw-bold">
+                        <span>Total:</span>
+                        <span>${{ final_total|floatformat:2 }}</span>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-</div>
 
 {% block extra_js %}
 <script>
