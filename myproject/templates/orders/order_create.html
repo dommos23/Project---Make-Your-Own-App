@@ -9,7 +9,6 @@
         <h1>Checkout</h1>
         <form method="post" id="checkout-form">
             {% csrf_token %}
-            <!-- Shipping info section unchanged -->
             <div class="card mb-4">
                 <div class="card-header">
                     <h5 class="mb-0">Shipping Information</h5>
@@ -156,26 +155,61 @@
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Shipping address toggle
-        var useProfileAddressCheckbox = document.getElementById('{{ order_form.use_profile_address.id_for_label }}');
+        // Get elements
+        var useProfileAddressCheckbox = document.getElementById('id_use_profile_address');
         var shippingFields = document.getElementById('shipping-fields');
+        var shippingInputs = shippingFields ? shippingFields.querySelectorAll('input, textarea, select') : [];
+        var form = document.getElementById('checkout-form');
         
-        if (useProfileAddressCheckbox) {
+        // Function to toggle required fields
+        function toggleRequiredFields() {
+            if (useProfileAddressCheckbox && useProfileAddressCheckbox.checked) {
+                // When using profile address, remove required attribute from shipping fields
+                shippingInputs.forEach(function(input) {
+                    if (input.hasAttribute('required')) {
+                        // Store the original required state so we can restore it
+                        input.setAttribute('data-was-required', 'true');
+                        input.removeAttribute('required');
+                    }
+                });
+            } else {
+                // When not using profile address, restore required attribute
+                shippingInputs.forEach(function(input) {
+                    if (input.getAttribute('data-was-required') === 'true') {
+                        input.setAttribute('required', 'required');
+                    }
+                });
+            }
+        }
+        
+        // Set initial state
+        if (useProfileAddressCheckbox && shippingFields) {
+            // Set initial display state
+            if (useProfileAddressCheckbox.checked) {
+                shippingFields.style.display = 'none';
+            }
+            
+            // Set initial required state
+            toggleRequiredFields();
+            
+            // Add event listener
             useProfileAddressCheckbox.addEventListener('change', function() {
+                // Update display
                 if (this.checked) {
                     shippingFields.style.display = 'none';
                 } else {
                     shippingFields.style.display = 'block';
                 }
+                
+                // Update required fields
+                toggleRequiredFields();
             });
+        }
             
-            // Set initial state
-            if (useProfileAddressCheckbox.checked) {
-                shippingFields.style.display = 'none';
-            }
+            // Add change event listener
+            useProfileAddressCheckbox.addEventListener('change', toggleShippingFields);
         }
         
-        // Payment method toggle
         var savedMethodRadios = document.querySelectorAll('input[name="use_saved_method"]');
         var newPaymentMethod = document.getElementById('new-payment-method');
         

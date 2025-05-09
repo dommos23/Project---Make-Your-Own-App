@@ -1,4 +1,3 @@
-# orders/views.py - Clean up imports
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -51,7 +50,6 @@ def order_cancel(request, order_id):
     # If not POST request, redirect back to order detail
     return redirect('orders:order_detail', order_id=order.id)
 @login_required
-@login_required
 def order_create(request):
     cart_items = Cart.objects.filter(user=request.user)
     user = request.user
@@ -89,6 +87,7 @@ def order_create(request):
                 
     saved_payment_methods = SavedPaymentMethod.objects.filter(user=request.user)
     default_payment_method = saved_payment_methods.filter(is_default=True).first()
+    
     if request.method == 'POST':
         order_form = OrderCreateForm(request.POST)
         payment_form = PaymentForm(request.POST)
@@ -125,10 +124,13 @@ def order_create(request):
             except SavedPaymentMethod.DoesNotExist:
                 messages.error(request, "Selected payment method not found.")
                 is_valid = False
+                
         if order_form.is_valid() and payment_form.is_valid() and is_valid:
             # Create order
             order = order_form.save(commit=False)
             order.user = request.user
+            
+            # Check if user wants to use profile address
             use_profile_address = order_form.cleaned_data.get('use_profile_address')
             if use_profile_address and has_profile_address:
                 # Copy address from profile
@@ -138,6 +140,12 @@ def order_create(request):
                 order.shipping_state = profile.state
                 order.shipping_zip = profile.zip_code
                 order.shipping_country = profile.country
+                
+                # Log to verify this is happening
+                print(f"Using profile address: {profile.address}, {profile.city}, {profile.state}")
+            else:
+                print("Using form address")
+                
             save_payment_method = payment_form.cleaned_data.get('save_payment_method')
             if save_payment_method and not use_saved_method:
                 # Only save if using a new payment method
@@ -152,6 +160,7 @@ def order_create(request):
                     card_expiry=card_expiry,
                     is_default=not SavedPaymentMethod.objects.filter(user=request.user).exists()  # Make default if first
                 )
+            
             # Apply the discount (if any)
             if discount:
                 order.discount = discount
@@ -228,6 +237,7 @@ def order_create(request):
         'final_total': final_total,
         'saved_payment_methods': saved_payment_methods,
         'default_payment_method': default_payment_method,
+        'has_profile_address': has_profile_address,  # Add this line
     }
     
     return render(request, 'orders/order_create.html', context)
