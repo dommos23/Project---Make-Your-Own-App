@@ -3,6 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .models import Order, OrderItem
+from payments.models import SavedPaymentMethod
 from discounts.forms import DiscountApplyForm
 from discounts.models import Discount
 from .utils import send_order_confirmation_email
@@ -85,7 +86,9 @@ def order_create(request):
             discount = None
             if 'discount_code' in request.session:
                 del request.session['discount_code']
-    
+                
+    saved_payment_methods = SavedPaymentMethod.objects.filter(user=request.user)
+    default_payment_method = saved_payment_methods.filter(is_default=True).first()
     if request.method == 'POST':
         order_form = OrderCreateForm(request.POST)
         payment_form = PaymentForm(request.POST)
@@ -108,7 +111,20 @@ def order_create(request):
         if not re.match(r'^[0-9]{3,4}$', card_cvv):
             messages.error(request, "Please enter a valid CVV (3-4 digits).")
             is_valid = False
-        
+            
+        use_saved_method = request.POST.get('use_saved_method')
+        if use_saved_method and use_saved_method.isdigit():
+            saved_method_id = int(use_saved_method)
+            try:
+                saved_method = SavedPaymentMethod.objects.get(id=saved_method_id, user=request.user)
+                # Use the saved method (in a real implementation, you'd retrieve the actual card data from a secure storage)
+                # Here we're just using the payment method type
+                payment_form.instance.payment_method = saved_method.payment_method
+                # Skip card validation since we're using a saved method
+                is_valid = True
+            except SavedPaymentMethod.DoesNotExist:
+                messages.error(request, "Selected payment method not found.")
+                is_valid = False
         if order_form.is_valid() and payment_form.is_valid() and is_valid:
             # Create order
             order = order_form.save(commit=False)
@@ -122,7 +138,20 @@ def order_create(request):
                 order.shipping_state = profile.state
                 order.shipping_zip = profile.zip_code
                 order.shipping_country = profile.country
-            
+            save_payment_method = payment_form.cleaned_data.get('save_payment_method')
+            if save_payment_method and not use_saved_method:
+                # Only save if using a new payment method
+                card_number = request.POST.get('card_number', '')
+                card_expiry = request.POST.get('card_expiry', '')
+                
+                # Save the payment method (only store last 4 digits of card)
+                SavedPaymentMethod.objects.create(
+                    user=request.user,
+                    payment_method=payment_form.cleaned_data['payment_method'],
+                    card_last_digits=card_number[-4:] if card_number else '',
+                    card_expiry=card_expiry,
+                    is_default=not SavedPaymentMethod.objects.filter(user=request.user).exists()  # Make default if first
+                )
             # Apply the discount (if any)
             if discount:
                 order.discount = discount
@@ -181,7 +210,13 @@ def order_create(request):
             return redirect('orders:order_detail', order_id=order.id)
     else:
         order_form = OrderCreateForm()
-        payment_form = PaymentForm(initial={'payment_method': 'Credit Card'})
+        
+        # If user has a default payment method, pre-select it
+        initial_payment_data = {'payment_method': 'Credit Card'}
+        if default_payment_method:
+            initial_payment_data['payment_method'] = default_payment_method.payment_method
+        
+        payment_form = PaymentForm(initial=initial_payment_data)
     
     context = {
         'order_form': order_form,
@@ -190,7 +225,9 @@ def order_create(request):
         'cart_total': cart_total,
         'discount': discount,
         'discount_amount': discount_amount,
-        'final_total': final_total
+        'final_total': final_total,
+        'saved_payment_methods': saved_payment_methods,
+        'default_payment_method': default_payment_method,
     }
     
     return render(request, 'orders/order_create.html', context)

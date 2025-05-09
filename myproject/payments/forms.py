@@ -1,13 +1,12 @@
 from django import forms
 from .models import Payment
 
+
 class PaymentForm(forms.ModelForm):
-    card_number = forms.CharField(max_length=16, required=True, 
-                                 widget=forms.TextInput(attrs={'placeholder': 'Card Number'}))
-    card_expiry = forms.CharField(max_length=5, required=True, 
-                                 widget=forms.TextInput(attrs={'placeholder': 'MM/YY'}))
-    card_cvv = forms.CharField(max_length=4, required=True, 
-                              widget=forms.TextInput(attrs={'placeholder': 'CVV'}))
+    card_number = forms.CharField(max_length=16, required=True, widget=forms.TextInput(attrs={'placeholder': 'Card Number'}))
+    card_expiry = forms.CharField(max_length=5, required=True, widget=forms.TextInput(attrs={'placeholder': 'MM/YY'}))
+    card_cvv = forms.CharField(max_length=4, required=True, widget=forms.TextInput(attrs={'placeholder': 'CVV'}))
+    save_payment_method = forms.BooleanField(required=False, initial=False, label="Save payment method for future purchases")
     
     class Meta:
         model = Payment

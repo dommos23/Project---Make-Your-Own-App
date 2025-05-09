@@ -36,77 +36,80 @@
                 </div>
             </div>
             
-            <!-- Add this JavaScript to toggle the shipping fields visibility -->
-            {% block extra_js %}
-            <script>
-                document.addEventListener('DOMContentLoaded', function() {
-                    var useProfileAddressCheckbox = document.getElementById('{{ order_form.use_profile_address.id_for_label }}');
-                    var shippingFields = document.getElementById('shipping-fields');
-                    
-                    if (useProfileAddressCheckbox) {
-                        useProfileAddressCheckbox.addEventListener('change', function() {
-                            if (this.checked) {
-                                shippingFields.style.display = 'none';
-                            } else {
-                                shippingFields.style.display = 'block';
-                            }
-                        });
-                    }
-                });
-            </script>
-            {% endblock %}
-            
             <div class="card mb-4">
                 <div class="card-header">
                     <h5 class="mb-0">Payment Information</h5>
                 </div>
                 <div class="card-body">
-                    <!-- Payment method field -->
-                    <div class="mb-3">
-                        <label for="{{ payment_form.payment_method.id_for_label }}">Payment Method</label>
-                        {{ payment_form.payment_method }}
-                    </div>
-                    
-                    <!-- Custom fields with validation -->
-                    <div class="form-group mb-3">
-                        <label for="card_number">Card Number</label>
-                        <input type="text" name="card_number" id="card_number" class="form-control" required 
-                               pattern="[0-9]{13,16}" title="Card number must be 13-16 digits">
-                        <div class="invalid-feedback" id="card-number-error">
-                            Please enter a valid card number (13-16 digits).
+                    <!-- Saved payment methods section -->
+                    {% if saved_payment_methods %}
+                    <div class="mb-4">
+                        <h6>Your Saved Payment Methods</h6>
+                        
+                        {% for method in saved_payment_methods %}
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="use_saved_method" id="method_{{ method.id }}" 
+                                   value="{{ method.id }}" {% if method.is_default %}checked{% endif %}>
+                            <label class="form-check-label" for="method_{{ method.id }}">
+                                {{ method }} {% if method.is_default %}<span class="badge bg-info">Default</span>{% endif %}
+                            </label>
+                        </div>
+                        {% endfor %}
+                        
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="radio" name="use_saved_method" id="method_new" value="" 
+                                   {% if not default_payment_method %}checked{% endif %}>
+                            <label class="form-check-label" for="method_new">
+                                Use a new payment method
+                            </label>
                         </div>
                     </div>
+                    {% endif %}
                     
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="card_expiry">Expiration Date (MM/YY)</label>
-                                <input type="text" name="card_expiry" id="card_expiry" class="form-control" required 
-                                       pattern="(0[1-9]|1[0-2])\/[0-9]{2}" title="Please use MM/YY format (e.g. 05/25)">
-                                <div class="invalid-feedback" id="card-expiry-error">
-                                    Please enter a valid expiration date in MM/YY format.
+                    <!-- New payment method form (will be hidden if using saved method) -->
+                    <div id="new-payment-method">
+                        <div class="mb-3">
+                            <label for="{{ payment_form.payment_method.id_for_label }}">Payment Method</label>
+                            {{ payment_form.payment_method }}
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="card_number">Card Number</label>
+                            <input type="text" name="card_number" id="card_number" class="form-control" required>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="card_expiry">Expiration Date (MM/YY)</label>
+                                    <input type="text" name="card_expiry" id="card_expiry" class="form-control" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="card_cvv">CVV</label>
+                                    <input type="text" name="card_cvv" id="card_cvv" class="form-control" required>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="card_cvv">CVV</label>
-                                <input type="text" name="card_cvv" id="card_cvv" class="form-control" required 
-                                       pattern="[0-9]{3,4}" title="CVV must be 3-4 digits">
-                                <div class="invalid-feedback" id="card-cvv-error">
-                                    Please enter a valid CVV (3-4 digits).
-                                </div>
-                            </div>
+                        
+                        <!-- Add option to save this payment method -->
+                        <div class="form-check mb-3">
+                            {{ payment_form.save_payment_method }}
+                            <label class="form-check-label" for="{{ payment_form.save_payment_method.id_for_label }}">
+                                {{ payment_form.save_payment_method.label }}
+                            </label>
                         </div>
                     </div>
                 </div>
             </div>
             
-            <button type="submit" class="btn btn-primary">Complete Purchase</button>
+            <!-- Add button to submit the form -->
+            <button type="submit" class="btn btn-primary mb-4">Complete Purchase</button>
         </form>
     </div>
     
-    <!-- Order summary section unchanged -->
+    <!-- Add the order summary section -->
     <div class="col-md-4">
         <div class="card">
             <div class="card-header">
@@ -124,7 +127,7 @@
                     {% endfor %}
                 </ul>
                 
-                <!-- Add this section for discount information -->
+                <!-- Discount section -->
                 <div class="mt-3">
                     <div class="d-flex justify-content-between mb-2">
                         <span>Subtotal:</span>
@@ -146,47 +149,108 @@
                 </div>
             </div>
         </div>
+    </div>
+</div>
+{% endblock %}
 
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Shipping address toggle
+        var useProfileAddressCheckbox = document.getElementById('{{ order_form.use_profile_address.id_for_label }}');
+        var shippingFields = document.getElementById('shipping-fields');
+        
+        if (useProfileAddressCheckbox) {
+            useProfileAddressCheckbox.addEventListener('change', function() {
+                if (this.checked) {
+                    shippingFields.style.display = 'none';
+                } else {
+                    shippingFields.style.display = 'block';
+                }
+            });
+            
+            // Set initial state
+            if (useProfileAddressCheckbox.checked) {
+                shippingFields.style.display = 'none';
+            }
+        }
+        
+        // Payment method toggle
+        var savedMethodRadios = document.querySelectorAll('input[name="use_saved_method"]');
+        var newPaymentMethod = document.getElementById('new-payment-method');
+        
+        function togglePaymentForm() {
+            var usingSavedMethod = document.querySelector('input[name="use_saved_method"]:checked') && 
+                                  document.querySelector('input[name="use_saved_method"]:checked').id !== 'method_new';
+            
+            if (usingSavedMethod) {
+                newPaymentMethod.style.display = 'none';
+                // Remove required attribute from fields when using saved method
+                document.getElementById('card_number').removeAttribute('required');
+                document.getElementById('card_expiry').removeAttribute('required');
+                document.getElementById('card_cvv').removeAttribute('required');
+            } else {
+                newPaymentMethod.style.display = 'block';
+                // Add required attribute back
+                document.getElementById('card_number').setAttribute('required', '');
+                document.getElementById('card_expiry').setAttribute('required', '');
+                document.getElementById('card_cvv').setAttribute('required', '');
+            }
+        }
+        
+        // Add event listeners to all radio buttons
+        if (savedMethodRadios.length > 0) {
+            savedMethodRadios.forEach(function(radio) {
+                radio.addEventListener('change', togglePaymentForm);
+            });
+            
+            // Initial state setup
+            togglePaymentForm();
+        }
+        
+        // Form validation
         const form = document.getElementById('checkout-form');
         const cardNumber = document.getElementById('card_number');
         const cardExpiry = document.getElementById('card_expiry');
         const cardCvv = document.getElementById('card_cvv');
         
         form.addEventListener('submit', function(event) {
-            let isValid = true;
+            // Skip validation if using saved method
+            var usingSavedMethod = document.querySelector('input[name="use_saved_method"]:checked') && 
+                                  document.querySelector('input[name="use_saved_method"]:checked').id !== 'method_new';
             
-            // Validate card number (13-16 digits)
-            if (!cardNumber.value.match(/^[0-9]{13,16}$/)) {
-                cardNumber.classList.add('is-invalid');
-                isValid = false;
-            } else {
-                cardNumber.classList.remove('is-invalid');
-            }
-            
-            // Validate expiry date (MM/YY format)
-            if (!cardExpiry.value.match(/^(0[1-9]|1[0-2])\/[0-9]{2}$/)) {
-                cardExpiry.classList.add('is-invalid');
-                isValid = false;
-            } else {
-                cardExpiry.classList.remove('is-invalid');
-            }
-            
-            // Validate CVV (3-4 digits)
-            if (!cardCvv.value.match(/^[0-9]{3,4}$/)) {
-                cardCvv.classList.add('is-invalid');
-                isValid = false;
-            } else {
-                cardCvv.classList.remove('is-invalid');
-            }
-            
-            if (!isValid) {
-                event.preventDefault();
+            if (!usingSavedMethod) {
+                let isValid = true;
+                
+                // Validate card number (13-16 digits)
+                if (!cardNumber.value.match(/^[0-9]{13,16}$/)) {
+                    cardNumber.classList.add('is-invalid');
+                    isValid = false;
+                } else {
+                    cardNumber.classList.remove('is-invalid');
+                }
+                
+                // Validate expiry date (MM/YY format)
+                if (!cardExpiry.value.match(/^(0[1-9]|1[0-2])\/[0-9]{2}$/)) {
+                    cardExpiry.classList.add('is-invalid');
+                    isValid = false;
+                } else {
+                    cardExpiry.classList.remove('is-invalid');
+                }
+                
+                // Validate CVV (3-4 digits)
+                if (!cardCvv.value.match(/^[0-9]{3,4}$/)) {
+                    cardCvv.classList.add('is-invalid');
+                    isValid = false;
+                } else {
+                    cardCvv.classList.remove('is-invalid');
+                }
+                
+                if (!isValid) {
+                    event.preventDefault();
+                }
             }
         });
     });
 </script>
-{% endblock %}
 {% endblock %}

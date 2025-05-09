@@ -1,0 +1,59 @@
+<!-- templates/payments/manage_methods.html -->
+{% extends 'base.html' %}
+
+{% block title %}Manage Payment Methods | Clothing Store{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <h1>Manage Payment Methods</h1>
+        
+        {% if payment_methods %}
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Your Saved Payment Methods</h5>
+                
+                <div class="list-group">
+                    {% for method in payment_methods %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>{{ method }}</strong>
+                            {% if method.is_default %}
+                            <span class="badge bg-info ms-2">Default</span>
+                            {% endif %}
+                            {% if method.card_expiry %}
+                            <small class="d-block text-muted">Expires: {{ method.card_expiry }}</small>
+                            {% endif %}
+                        </div>
+                        <div class="btn-group">
+                            {% if not method.is_default %}
+                            <form method="post" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" name="set_default" value="{{ method.id }}" class="btn btn-sm btn-outline-primary">
+                                    Set as Default
+                                </button>
+                            </form>
+                            {% endif %}
+                            <form method="post" class="d-inline ms-2">
+                                {% csrf_token %}
+                                <button type="submit" name="delete_method" value="{{ method.id }}" class="btn btn-sm btn-outline-danger"
+                                        onclick="return confirm('Are you sure you want to remove this payment method?');">
+                                    Remove
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            You don't have any saved payment methods yet. Payment methods will be saved when you make a purchase and check the "Save payment method" option.
+        </div>
+        {% endif %}
+        
+        <a href="{% url 'user_profiles:profile' %}" class="btn btn-secondary">Back to Profile</a>
+    </div>
+</div>
+{% endblock %}
