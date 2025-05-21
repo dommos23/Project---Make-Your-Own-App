@@ -11,6 +11,9 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+import os
+import dj_database_url
+from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -25,7 +28,7 @@ SECRET_KEY = 'django-insecure-x$98s6@fra_+dei0v=6x^&rmj#t2v@na1a2z51f9q2u&zxq(^1
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['project-make-your-own-app-production.up.railway.app',]
+ALLOWED_HOSTS = ['project-make-your-own-app-production.up.railway.app', '127.0.0.1', 'localhost']
 #CSRF For RAILWAY.APP
 CSRF_TRUSTED_ORIGINS = [
     'https://project-make-your-own-app-production.up.railway.app'
