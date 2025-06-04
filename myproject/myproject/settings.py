@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-x$98s6@fra_+dei0v=6x^&rmj#t2v@na1a2z51f9q2u&zxq(^1
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['project-make-your-own-app-production.up.railway.app', '0.0.0.0', 'localhost']
+ALLOWED_HOSTS = ['project-make-your-own-app-production.up.railway.app', '0.0.0.0', 'localhost', '127.0.0.1']
 #CSRF For RAILWAY.APP
 CSRF_TRUSTED_ORIGINS = [
     'https://project-make-your-own-app-production.up.railway.app'
@@ -83,7 +83,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'caRT.context_processors.cart_processor',  # We'll create this later
+                'caRT.context_processors.cart_processor', 
             ],
         },
     },

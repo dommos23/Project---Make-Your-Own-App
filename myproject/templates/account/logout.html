@@ -1,0 +1,61 @@
+<!-- templates/account/logout.html -->
+{% extends "base.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}Sign Out | Clothing Store{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/account-pages.css' %}" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+{% endblock %}
+
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block content %}
+<div class="account-container">
+    <div class="account-card">
+        <div class="account-header">
+            <div class="logout-icon">
+                <i class="fas fa-sign-out-alt"></i>
+            </div>
+            <h1 class="account-title">Sign Out</h1>
+            <p class="account-subtitle">Thanks for visiting Clothing Store</p>
+        </div>
+        
+        <div class="confirmation-text">
+            <p><strong>Are you sure you want to sign out?</strong></p>
+            <p>You'll need to sign in again to access your account, view orders, and make purchases.</p>
+        </div>
+        
+        <form method="post" action="{% url 'account_logout' %}">
+            {% csrf_token %}
+            {% if redirect_field_value %}
+                <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}"/>
+            {% endif %}
+            
+            <button type="submit" class="btn btn-account w-100 mb-3">
+                <i class="fas fa-sign-out-alt"></i> Yes, Sign Me Out
+            </button>
+        </form>
+        
+        <div class="text-center">
+            <a href="{% url 'home' %}" class="btn-secondary-account">
+                <i class="fas fa-home"></i> No, Take Me Home
+            </a>
+        </div>
+        
+        <!-- Quick actions for logged-in users -->
+        <div class="account-menu mt-4">
+            <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
+            <ul>
+                <li><a href="{% url 'user_profiles:profile' %}"><i class="fas fa-user"></i> View Profile</a></li>
+                <li><a href="{% url 'orders:order_history' %}"><i class="fas fa-shopping-bag"></i> Order History</a></li>
+                <li><a href="{% url 'caRT:cart_detail' %}"><i class="fas fa-shopping-cart"></i> My Cart</a></li>
+                <li><a href="{% url 'products:product_list' %}"><i class="fas fa-store"></i> Continue Shopping</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
